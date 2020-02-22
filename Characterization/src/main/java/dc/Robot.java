@@ -30,12 +30,12 @@ public class Robot extends TimedRobot {
 
   static private double WHEEL_DIAMETER = 0.1526;
   static private double GEARING = 360;
-  public static final int kLeftMotor1Port = 1;
-  public static final int kLeftMotor2Port = 3;
-  public static final int kRightMotor1Port = 2;
-  public static final int kRightMotor2Port = 4;
-  public static final int kLeftEncoderPort = 11;
-  public static final int kRightEncoderPort = 12;
+  public static final int kLeftMotor1Port = 26;
+  public static final int kLeftMotor2Port = 25;
+  public static final int kRightMotor1Port = 22;
+  public static final int kRightMotor2Port = 24;
+  public static final int kLeftEncoderPort = 51;
+  public static final int kRightEncoderPort = 50;
   public static final int kGyroPort = 35;
 
   Joystick stick;
