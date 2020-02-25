@@ -9,7 +9,11 @@ package frc.robot;
 
 import java.util.List;
 
+import java.io.IOException;
+import java.nio.file.Path;
+import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.GenericHID;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.controller.PIDController;
 import edu.wpi.first.wpilibj.controller.RamseteController;
@@ -18,6 +22,7 @@ import edu.wpi.first.wpilibj.geometry.Pose2d;
 import edu.wpi.first.wpilibj.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.geometry.Translation2d;
 import edu.wpi.first.wpilibj.trajectory.Trajectory;
+import edu.wpi.first.wpilibj.trajectory.TrajectoryUtil;
 import edu.wpi.first.wpilibj.trajectory.TrajectoryConfig;
 import edu.wpi.first.wpilibj.trajectory.TrajectoryGenerator;
 import edu.wpi.first.wpilibj.trajectory.constraint.DifferentialDriveVoltageConstraint;
@@ -25,7 +30,6 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.RamseteCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
-import edu.wpi.first.wpilibj.geometry.Pose2d;
 
 import frc.robot.Constants.AutoConstants;
 import frc.robot.Constants.DriveConstants;
@@ -54,6 +58,14 @@ public class RobotContainer {
     // Configure the button bindings
     configureButtonBindings();
 
+    // Configure default commands
+    // Set the default drive command to split-stick arcade drive
+    m_robotDrive.setDefaultCommand(
+        // A split-stick arcade command, with forward/backward controlled by the left
+        // hand, and turning controlled by the right.
+        new RunCommand(() -> m_robotDrive
+            .arcadeDrive(m_driverController.getY(GenericHID.Hand.kLeft)*.6,
+                         m_driverController.getX(GenericHID.Hand.kRight)*.6), m_robotDrive));
 
   }
 
@@ -67,7 +79,7 @@ public class RobotContainer {
     // Drive at half speed when the right bumper is held
     new JoystickButton(m_driverController, Button.kBumperRight.value)
         .whenPressed(() -> m_robotDrive.setMaxOutput(0.5))
-        .whenReleased(() -> m_robotDrive.setMaxOutput(0.7));
+        .whenReleased(() -> m_robotDrive.setMaxOutput(1));
 
   }
 
@@ -97,69 +109,49 @@ public class RobotContainer {
             // Apply the voltage constraint
             .addConstraint(autoVoltageConstraint);
 
-    // An example trajectory to follow.  All units in meters.
+    Trajectory exampleTrajectory;
+    /*
+            // An example trajectory to follow.  All units in meters.
     Trajectory exampleTrajectory = TrajectoryGenerator.generateTrajectory(
         // Start at the origin facing the +X direction
         new Pose2d(0, 0, new Rotation2d(0)),
         // Pass through these two interior waypoints, making an 's' curve path
         List.of(
-            new Translation2d(1, 1),
-            new Translation2d(2, -1)
+            new Translation2d(1, 0),
+            new Translation2d(2, 0)
         ),
         // End 3 meters straight ahead of where we started, facing forward
         new Pose2d(3, 0, new Rotation2d(0)),
         // Pass config
         config
     );
+*/
+    String trajectoryJSON = "Paths/GetThreeBalls.wpilib.json";
+    try {
+      Path trajectoryPath = Filesystem.getDeployDirectory().toPath().resolve(trajectoryJSON);
+      exampleTrajectory = TrajectoryUtil.fromPathweaverJson(trajectoryPath);
+      System.out.println("opened trajectory: " + trajectoryJSON);
+    } catch (IOException ex) {
+      System.out.println("Unable to open trajectory: " + trajectoryJSON);
+    }
 
     RamseteCommand ramseteCommand = new RamseteCommand(
-        exampleTrajectory,
-        m_robotDrive::getPose,
-        new RamseteController(AutoConstants.kRamseteB, AutoConstants.kRamseteZeta),
-        new SimpleMotorFeedforward(DriveConstants.ksVolts,
-                                   DriveConstants.kvVoltSecondsPerMeter,
-                                   DriveConstants.kaVoltSecondsSquaredPerMeter),
-        DriveConstants.kDriveKinematics,
-        m_robotDrive::getWheelSpeeds,
-        new PIDController(DriveConstants.kPDriveVel, 0, 0),
-        new PIDController(DriveConstants.kPDriveVel, 0, 0),
-        // RamseteCommand passes volts to the callback
-        m_robotDrive::tankDriveVolts,
-        m_robotDrive
-    );
+      exampleTrajectory,
+      m_robotDrive::getPose,
+      new RamseteController(AutoConstants.kRamseteB, AutoConstants.kRamseteZeta),
+      new SimpleMotorFeedforward(DriveConstants.ksVolts,
+                                 DriveConstants.kvVoltSecondsPerMeter,
+                                 DriveConstants.kaVoltSecondsSquaredPerMeter),
+      DriveConstants.kDriveKinematics,
+      m_robotDrive::getWheelSpeeds,
+      new PIDController(DriveConstants.kPDriveVel, 0, 0),
+      new PIDController(DriveConstants.kPDriveVel, 0, 0),
+      // RamseteCommand passes volts to the callback
+      m_robotDrive::tankDriveVolts,
+      m_robotDrive
+  );
 
     // Run path following command, then stop at the end.
     return ramseteCommand.andThen(() -> m_robotDrive.tankDriveVolts(0, 0));
-  }
-
-  public void showTest()
-  {
-    double left = .3;
-    double right = .3;
-
-    m_robotDrive.tankDrive(left, right);
-
-    System.out.format("L:%8.2f R:%8.2f H:%8.2f LS:%8.2f LP:%8.2f RS:%8.2f RP:%8.2f H:%8.2f\n",
-    left,right,
-    m_robotDrive.getHeading(),
-    m_robotDrive.getLeftEncoderSpeed(),m_robotDrive.getLeftEncoderPosition(),
-    m_robotDrive.getRightEncoderSpeed(),m_robotDrive.getRightEncoderPosition(),
-    m_robotDrive.getHeading());  
-  }
-
-  public void resetPose()
-  {
-    m_robotDrive.zeroHeading();
-    m_robotDrive.resetOdometry(new Pose2d());
-  }
-
-  public void drive()
-  {
-    m_robotDrive.arcadeDrive(m_driverController.getRawAxis(1)*.5, m_driverController.getRawAxis(4)*.5);
-
-    if(true == m_driverController.getRawButton(5))
-    {
-      resetPose();
-    }
   }
 }
