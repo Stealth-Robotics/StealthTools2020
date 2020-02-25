@@ -75,7 +75,7 @@ public class DriveSubsystem extends SubsystemBase {
   @Override
   public void periodic() {
     // Update the odometry in the periodic block
-    System.out.printf("%s\n",sOdometry.getPoseMeters().toString());
+    //System.out.printf("%s\n",sOdometry.getPoseMeters().toString());
     sOdometry.update(Rotation2d.fromDegrees(getHeading()), getLeftEncoderPosition(),
                       getRightEncoderPosition());
   }

@@ -66,8 +66,8 @@ public class RobotContainer {
   private void configureButtonBindings() {
     // Drive at half speed when the right bumper is held
     new JoystickButton(m_driverController, Button.kBumperRight.value)
-        .whenPressed(() -> m_robotDrive.setMaxOutput(0.2))
-        .whenReleased(() -> m_robotDrive.setMaxOutput(1));
+        .whenPressed(() -> m_robotDrive.setMaxOutput(0.5))
+        .whenReleased(() -> m_robotDrive.setMaxOutput(0.7));
 
   }
 
@@ -103,8 +103,8 @@ public class RobotContainer {
         new Pose2d(0, 0, new Rotation2d(0)),
         // Pass through these two interior waypoints, making an 's' curve path
         List.of(
-            new Translation2d(1, 0),
-            new Translation2d(2, 0)
+            new Translation2d(1, 1),
+            new Translation2d(2, -1)
         ),
         // End 3 meters straight ahead of where we started, facing forward
         new Pose2d(3, 0, new Rotation2d(0)),
@@ -134,21 +134,32 @@ public class RobotContainer {
 
   public void showTest()
   {
-    double left = .2;
-    double right = .2;
+    double left = .3;
+    double right = .3;
 
     m_robotDrive.tankDrive(left, right);
 
-    System.out.format("L:%8.2f R:%8.2f H:%8.2f LS:%8.2f LP:%8.2f RS:%8.2f RP:%8.2f\n",
+    System.out.format("L:%8.2f R:%8.2f H:%8.2f LS:%8.2f LP:%8.2f RS:%8.2f RP:%8.2f H:%8.2f\n",
     left,right,
     m_robotDrive.getHeading(),
     m_robotDrive.getLeftEncoderSpeed(),m_robotDrive.getLeftEncoderPosition(),
-    m_robotDrive.getRightEncoderSpeed(),m_robotDrive.getRightEncoderPosition());  
+    m_robotDrive.getRightEncoderSpeed(),m_robotDrive.getRightEncoderPosition(),
+    m_robotDrive.getHeading());  
   }
 
   public void resetPose()
   {
     m_robotDrive.zeroHeading();
     m_robotDrive.resetOdometry(new Pose2d());
+  }
+
+  public void drive()
+  {
+    m_robotDrive.arcadeDrive(m_driverController.getRawAxis(1)*.5, m_driverController.getRawAxis(4)*.5);
+
+    if(true == m_driverController.getRawButton(5))
+    {
+      resetPose();
+    }
   }
 }
