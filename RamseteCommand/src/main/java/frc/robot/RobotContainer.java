@@ -109,9 +109,7 @@ public class RobotContainer {
             // Apply the voltage constraint
             .addConstraint(autoVoltageConstraint);
 
-    Trajectory exampleTrajectory;
-    /*
-            // An example trajectory to follow.  All units in meters.
+    // An example trajectory to follow.  All units in meters.
     Trajectory exampleTrajectory = TrajectoryGenerator.generateTrajectory(
         // Start at the origin facing the +X direction
         new Pose2d(0, 0, new Rotation2d(0)),
@@ -125,15 +123,16 @@ public class RobotContainer {
         // Pass config
         config
     );
-*/
+
     String trajectoryJSON = "Paths/GetThreeBalls.wpilib.json";
     try {
       Path trajectoryPath = Filesystem.getDeployDirectory().toPath().resolve(trajectoryJSON);
       exampleTrajectory = TrajectoryUtil.fromPathweaverJson(trajectoryPath);
-      System.out.println("opened trajectory: " + trajectoryJSON);
     } catch (IOException ex) {
       System.out.println("Unable to open trajectory: " + trajectoryJSON);
     }
+
+    System.out.println("opened trajectory: " + trajectoryJSON);
 
     RamseteCommand ramseteCommand = new RamseteCommand(
       exampleTrajectory,
@@ -151,7 +150,7 @@ public class RobotContainer {
       m_robotDrive
   );
 
-    // Run path following command, then stop at the end.
-    return ramseteCommand.andThen(() -> m_robotDrive.tankDriveVolts(0, 0));
+      // Run path following command, then stop at the end.
+      return ramseteCommand.andThen(() -> m_robotDrive.tankDriveVolts(0, 0));
   }
 }
